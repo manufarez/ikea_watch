@@ -17,6 +17,27 @@ class ConfigTest < Minitest::Test
     assert_equal IkeaWatch::DEFAULT_CLIENT_ID, config.client_id
   end
 
+  def test_valid_telegram_settings
+    config = IkeaWatch::Config.from_env({ "TELEGRAM_BOT_TOKEN" => "123456:AA-b_c", "TELEGRAM_CHAT_ID" => "-100123" })
+
+    assert config.validate_telegram!.nil?
+  end
+
+  def test_malformed_token_is_described_without_its_value
+    token = "Use this token:\n123456:AAsecret"
+    config = IkeaWatch::Config.from_env({ "TELEGRAM_BOT_TOKEN" => token, "TELEGRAM_CHAT_ID" => "42" })
+
+    error = assert_raises(IkeaWatch::ConfigError) { config.validate_telegram! }
+    assert_includes error.message, "#{token.length} characters, contains whitespace or line breaks"
+    refute_includes error.message, "AAsecret"
+  end
+
+  def test_non_numeric_chat_id_is_rejected
+    config = IkeaWatch::Config.from_env({ "TELEGRAM_BOT_TOKEN" => "123456:AA", "TELEGRAM_CHAT_ID" => "@me" })
+
+    assert_raises(IkeaWatch::ConfigError) { config.validate_telegram! }
+  end
+
   def test_rejects_invalid_item_numbers
     error = assert_raises(IkeaWatch::ConfigError) { IkeaWatch::Config.from_env({ "ITEM_NOS" => "80600606,abc" }) }
     assert_includes error.message, "abc"

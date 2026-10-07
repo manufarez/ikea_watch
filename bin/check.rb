@@ -10,12 +10,13 @@ dry_run = ARGV.include?("--dry-run")
 
 begin
   config = IkeaWatch::Config.from_env
+  unless dry_run
+    raise IkeaWatch::ConfigError, "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required (or use --dry-run)" unless config.telegram_configured?
+
+    config.validate_telegram!
+  end
 rescue IkeaWatch::ConfigError => e
   abort "Configuration error: #{e.message}"
-end
-
-unless dry_run || config.telegram_configured?
-  abort "Configuration error: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required (or use --dry-run)"
 end
 
 IkeaWatch::Runner.new(

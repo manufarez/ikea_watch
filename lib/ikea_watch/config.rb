@@ -54,5 +54,17 @@ module IkeaWatch
     def telegram_configured?
       !telegram_token.nil? && !telegram_chat_id.nil?
     end
+
+    # Describes a malformed token by its shape only, never its value.
+    def validate_telegram!
+      unless telegram_token.match?(/\A\d+:[\w-]+\z/)
+        shape = "#{telegram_token.length} characters"
+        shape += ", contains whitespace or line breaks" if telegram_token.match?(/\s/)
+        raise ConfigError, "TELEGRAM_BOT_TOKEN does not look like a bot token (expected 123456:ABC..., got #{shape})"
+      end
+      return if telegram_chat_id.match?(/\A-?\d+\z/)
+
+      raise ConfigError, "TELEGRAM_CHAT_ID should be a number (got #{telegram_chat_id.length} characters)"
+    end
   end
 end
