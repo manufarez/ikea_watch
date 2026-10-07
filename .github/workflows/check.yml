@@ -1,0 +1,47 @@
+name: Check IKEA availability
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ikea-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Check availability
+        run: ruby bin/check.rb
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          IKEA_CLIENT_ID: ${{ secrets.IKEA_CLIENT_ID }}
+          ITEM_NOS: ${{ vars.ITEM_NOS }}
+          STORE_IDS: ${{ vars.STORE_IDS }}
+
+      - name: Commit state.json if it changed
+        run: |
+          [ -f state.json ] || exit 0
+          git add state.json
+          if git diff --cached --quiet; then
+            echo "state.json unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update availability state"
+          git pull --rebase
+          git push

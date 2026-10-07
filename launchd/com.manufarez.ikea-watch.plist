@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.manufarez.ikea-watch</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/Users/manufarez/Code/ikea_watch/bin/run-local.sh</string>
+  </array>
+
+  <!-- Every 30 minutes, plus once at load. Missed runs while asleep are run on wake. -->
+  <key>StartInterval</key>
+  <integer>1800</integer>
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/manufarez/Library/Logs/ikea-watch.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/manufarez/Library/Logs/ikea-watch.log</string>
+</dict>
+</plist>

@@ -1,0 +1,19 @@
+name: Tests
+
+on:
+  push:
+    paths-ignore:
+      - state.json
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - run: rake test

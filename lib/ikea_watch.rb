@@ -1,0 +1,8 @@
+require_relative "ikea_watch/config"
+require_relative "ikea_watch/client"
+require_relative "ikea_watch/parser"
+require_relative "ikea_watch/diff"
+require_relative "ikea_watch/message"
+require_relative "ikea_watch/telegram"
+require_relative "ikea_watch/state"
+require_relative "ikea_watch/runner"
