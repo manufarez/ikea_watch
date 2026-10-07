@@ -1,0 +1,25 @@
+{
+  "items": {
+    "80600606": {
+      "online_buyable": false,
+      "online_probability": "OUT_OF_STOCK",
+      "online_restock_date": null,
+      "stores": {
+        "612": {
+          "name": "Oceanía",
+          "quantity": 1,
+          "probability": "MEDIUM_IN_STOCK",
+          "restock_date": null
+        },
+        "652": {
+          "name": "Puebla",
+          "quantity": 5,
+          "probability": "HIGH_IN_STOCK",
+          "restock_date": null
+        }
+      }
+    }
+  },
+  "consecutive_failures": 0,
+  "outage_alerted": false
+}
