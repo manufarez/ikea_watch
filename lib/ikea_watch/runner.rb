@@ -2,8 +2,13 @@ module IkeaWatch
   # One check: fetch, compare with the previous snapshot, notify, then save state.
   # State is saved only after Telegram accepted the message, so a failed send is retried next run.
   class Runner
-    def initialize(config:, client:, notifier:, state:, dry_run: false, out: $stdout)
+    # heartbeat: decides when the daily check-in is due. run_stats: callable returning RunStats or nil.
+    def initialize(config:, client:, notifier:, state:, heartbeat:, run_stats: -> {}, force_heartbeat: false,
+                   dry_run: false, out: $stdout)
       @config = config
+      @heartbeat = heartbeat
+      @run_stats = run_stats
+      @force_heartbeat = force_heartbeat
       @client = client
       @notifier = notifier
       @state = state
@@ -41,6 +46,7 @@ module IkeaWatch
 
       deliver(text) if text
       @state.update_items(current, @config.item_nos)
+      @state.heartbeat_sent_on = @heartbeat.today if heartbeat_due?
       @state.save
     end
 
@@ -54,7 +60,12 @@ module IkeaWatch
       parts << Message.recovered(recovered_after) if recovered_after
       parts << Message.started(new_items) if new_items.any?
       parts << Message.changes(changes) if changes.any?
+      parts << Message.heartbeat(current, @run_stats.call) if heartbeat_due?
       parts.empty? ? nil : parts.join("\n\n")
+    end
+
+    def heartbeat_due?
+      @force_heartbeat || @heartbeat.due?(@state.heartbeat_sent_on)
     end
 
     def deliver(text)

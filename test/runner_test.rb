@@ -92,6 +92,21 @@ class RunnerTest < Minitest::Test
     refute File.exist?(@state_path)
   end
 
+  def test_heartbeat_is_sent_once_per_day_after_nine_mexico_time
+    run_check
+    stats = IkeaWatch::RunStats.summarize([Time.utc(2026, 10, 7, 15, 3)], now: Time.utc(2026, 10, 7, 15, 10))
+    run_check(now: Time.utc(2026, 10, 7, 15, 5), run_stats: -> { stats })
+    run_check(now: Time.utc(2026, 10, 7, 20))
+
+    assert_equal 2, @notifier.messages.size
+    assert_includes @notifier.messages.last, "Daily check-in"
+    assert_includes @notifier.messages.last, "Scheduled runs in the last 24 h: 1 of 48"
+    assert_equal "2026-10-07", saved_state["heartbeat_sent_on"]
+
+    run_check(now: Time.utc(2026, 10, 8, 15, 1))
+    assert_equal 3, @notifier.messages.size
+  end
+
   def test_dry_run_prints_without_sending_or_writing
     out = run_check(dry_run: true)
 
@@ -103,10 +118,12 @@ class RunnerTest < Minitest::Test
 
   private
 
-  def run_check(dry_run: false, notifier: @notifier)
+  # 14:00 UTC is 08:00 in Mexico City, before the default 09:00 check-in.
+  def run_check(dry_run: false, notifier: @notifier, now: Time.utc(2026, 10, 7, 14), run_stats: -> {})
     out = StringIO.new
     state = IkeaWatch::State.load(@state_path)
-    IkeaWatch::Runner.new(config: @config, client: @client, notifier:, state:, dry_run:, out:).run
+    heartbeat = IkeaWatch::Heartbeat.new(hour: @config.heartbeat_hour, now:)
+    IkeaWatch::Runner.new(config: @config, client: @client, notifier:, state:, heartbeat:, run_stats:, dry_run:, out:).run
     out.string
   end
 

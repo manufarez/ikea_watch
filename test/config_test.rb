@@ -38,6 +38,13 @@ class ConfigTest < Minitest::Test
     assert_raises(IkeaWatch::ConfigError) { config.validate_telegram! }
   end
 
+  def test_heartbeat_hour
+    assert_equal 9, IkeaWatch::Config.from_env({}).heartbeat_hour
+    assert_equal 18, IkeaWatch::Config.from_env({ "HEARTBEAT_HOUR" => "18" }).heartbeat_hour
+    assert_nil IkeaWatch::Config.from_env({ "HEARTBEAT_HOUR" => "off" }).heartbeat_hour
+    assert_raises(IkeaWatch::ConfigError) { IkeaWatch::Config.from_env({ "HEARTBEAT_HOUR" => "25" }) }
+  end
+
   def test_rejects_invalid_item_numbers
     error = assert_raises(IkeaWatch::ConfigError) { IkeaWatch::Config.from_env({ "ITEM_NOS" => "80600606,abc" }) }
     assert_includes error.message, "abc"

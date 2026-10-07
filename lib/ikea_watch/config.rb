@@ -19,8 +19,10 @@ module IkeaWatch
   DEFAULT_ITEM_NOS = "80600606".freeze
   DEFAULT_STORE_IDS = "612,652".freeze # Oceanía first, then Puebla
   DEFAULT_CLIENT_ID = "ef382663-a2a5-40d4-8afe-f0634821c0ed".freeze
+  DEFAULT_HEARTBEAT_HOUR = "9".freeze # Mexico City time
 
-  Config = Data.define(:item_nos, :stores, :client_id, :telegram_token, :telegram_chat_id, :state_path) do
+  Config = Data.define(:item_nos, :stores, :client_id, :telegram_token, :telegram_chat_id, :heartbeat_hour,
+                       :github_repository, :github_token, :state_path) do
     def self.from_env(env = ENV, state_path: File.expand_path("../../state.json", __dir__))
       new(
         item_nos: parse_item_nos(value(env, "ITEM_NOS", DEFAULT_ITEM_NOS)),
@@ -28,8 +30,21 @@ module IkeaWatch
         client_id: value(env, "IKEA_CLIENT_ID", DEFAULT_CLIENT_ID),
         telegram_token: value(env, "TELEGRAM_BOT_TOKEN", nil),
         telegram_chat_id: value(env, "TELEGRAM_CHAT_ID", nil),
+        heartbeat_hour: parse_heartbeat_hour(value(env, "HEARTBEAT_HOUR", DEFAULT_HEARTBEAT_HOUR)),
+        github_repository: value(env, "GITHUB_REPOSITORY", nil),
+        github_token: value(env, "GITHUB_TOKEN", nil),
         state_path: state_path
       )
+    end
+
+    # "off" disables the daily check-in.
+    def self.parse_heartbeat_hour(raw)
+      return nil if raw.casecmp?("off")
+
+      hour = Integer(raw, exception: false)
+      raise ConfigError, "HEARTBEAT_HOUR must be 0-23 or off (got #{raw})" unless hour&.between?(0, 23)
+
+      hour
     end
 
     # Blank values count as unset, so an empty GitHub variable falls back to the default.

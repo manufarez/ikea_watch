@@ -22,7 +22,11 @@ module IkeaWatch
 
     def consecutive_failures = data["consecutive_failures"]
 
-    def first_run? = items.empty?
+    def heartbeat_sent_on = data["heartbeat_sent_on"]
+
+    def heartbeat_sent_on=(date)
+      data["heartbeat_sent_on"] = date
+    end
 
     # Keeps only watched items, so removing one from ITEM_NOS drops it from state.
     def update_items(current, item_nos)

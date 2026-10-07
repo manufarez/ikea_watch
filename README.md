@@ -7,6 +7,7 @@ Plain Ruby (3.4+, no gems). It runs on GitHub Actions every 30 minutes, with a l
 
 ```sh
 ruby bin/check.rb --dry-run   # print the snapshot and the message, send and write nothing
+ruby bin/check.rb --dry-run --heartbeat   # same, including the daily check-in
 ruby bin/check.rb             # check, notify, update state.json
 rake test                     # minitest suite (uses fixtures/sample.json)
 ```
@@ -60,17 +61,22 @@ cannot read, it logs a warning. When that happens, save the real response as a f
     }
   },
   "consecutive_failures": 0,
-  "outage_alerted": false
+  "outage_alerted": false,
+  "heartbeat_sent_on": "2026-10-07"
 }
 ```
 
-The file is only rewritten when its content changes, so the workflow commits only real changes.
+The file is only rewritten when its content changes, so the workflow commits only real changes,
+plus one commit a day for `heartbeat_sent_on`.
 
 ### Messages
 
 - **First run, or a newly added article:** a "Now watching" summary of the current state.
 - **Changes:** one line per changed field, for example `Oceanía quantity: 1 → 0`.
 - **🚨 Highlighted at the top:** the article becoming buyable online, or a restock date appearing (online or in a store).
+- **💓 Daily check-in:** on the first run after 09:00 Mexico City time, a summary of the current state, plus how punctual
+  GitHub's schedule was over the last 24 hours: runs out of the 48 expected, start delay after :00/:30, and the longest
+  gap between runs. If it stops arriving, the monitor has stopped. Set `HEARTBEAT_HOUR=off` to disable it.
 - **Outage:** after 3 failed checks in a row, a single "monitoring is not working" alert. A "working again" message
   follows once a check succeeds.
 
@@ -83,6 +89,7 @@ The file is only rewritten when its content changes, so the workflow commits onl
 | `ITEM_NOS` | no | `80600606` | Comma-separated, dots allowed: `806.006.06,123.456.78` |
 | `IKEA_CLIENT_ID` | no | the public ikea.com client id | Override if IKEA rotates it |
 | `STORE_IDS` | no | `612,652` | Store codes, in display order |
+| `HEARTBEAT_HOUR` | no | `9` | Hour (Mexico City time, 0-23) of the daily check-in, or `off` |
 
 To get a nice name and the exact product URL in messages, add the article to `PRODUCTS` in
 `lib/ikea_watch/config.rb`. Without that entry, messages fall back to "Item 123.456.78" and an ikea.com search link.

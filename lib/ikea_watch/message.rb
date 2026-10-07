@@ -31,13 +31,36 @@ module IkeaWatch
     end
 
     def started(items)
-      items.map do |item_no, item|
-        lines = ["• Online: #{yes_no(item["online_buyable"])} (#{probability(item["online_probability"])})"]
-        lines += item["stores"].values.map do |store|
-          "• #{escape(store["name"])}: #{quantity(store["quantity"])} (#{probability(store["probability"])})"
-        end
-        ["👀 Now watching", item_heading(item_no), *lines, product_url(item_no)].join("\n")
-      end.join("\n\n")
+      items.map { |item_no, item| "👀 Now watching\n#{item_summary(item_no, item)}" }.join("\n\n")
+    end
+
+    def heartbeat(items, stats)
+      header = ["💓 <b>Daily check-in: still watching</b>", *run_stats(stats)].join("\n")
+      [header, *items.map { |item_no, item| item_summary(item_no, item) }].join("\n\n")
+    end
+
+    def run_stats(stats)
+      return ["Schedule stats unavailable (only computed on GitHub Actions)"] unless stats
+      return ["No scheduled runs in the last 24 h"] if stats.count.zero?
+
+      [
+        "Scheduled runs in the last 24 h: #{stats.count} of #{stats.expected}",
+        "Start delay after :00/:30: #{stats.average_delay} min on average, #{stats.max_delay} min at most",
+        "Longest gap between runs: #{duration(stats.longest_gap)}"
+      ]
+    end
+
+    def item_summary(item_no, item)
+      lines = ["• Online: #{yes_no(item["online_buyable"])} (#{probability(item["online_probability"])})"]
+      lines += item["stores"].values.map do |store|
+        "• #{escape(store["name"])}: #{quantity(store["quantity"])} (#{probability(store["probability"])})"
+      end
+      [item_heading(item_no), *lines, product_url(item_no)].join("\n")
+    end
+
+    def duration(minutes)
+      hours, mins = minutes.divmod(60)
+      hours.zero? ? "#{mins} min" : "#{hours} h #{mins.to_s.rjust(2, "0")} min"
     end
 
     def outage(failures, error)
