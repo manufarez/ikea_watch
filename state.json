@@ -21,5 +21,6 @@
     }
   },
   "consecutive_failures": 0,
-  "outage_alerted": false
+  "outage_alerted": false,
+  "heartbeat_sent_on": "2026-10-07"
 }
