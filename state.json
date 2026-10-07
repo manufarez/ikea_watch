@@ -1,8 +1,8 @@
 {
   "items": {
     "80600606": {
-      "online_buyable": false,
-      "online_probability": "OUT_OF_STOCK",
+      "online_buyable": true,
+      "online_probability": "HIGH_IN_STOCK",
       "online_restock_date": null,
       "stores": {
         "612": {
